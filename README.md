@@ -49,4 +49,4 @@ The Mac app isn't signed by Apple: the first time, right-click it and choose **O
 
 ---
 
-<sub>© 2026 Orestis Karamanlis · [github.com/sarcman](https://github.com/sarcman)</sub>
+<sub>© 2026 Orestis Karamanlis · <a href="https://github.com/sarcman">github.com/sarcman</a></sub>
