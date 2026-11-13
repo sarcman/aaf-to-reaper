@@ -47,6 +47,15 @@ echo "$OUT" >> "$LOG"
 RPPS=$(echo "$OUT" | sed -n 's/^  -> \(.*\.RPP\)  (.*/\1/p')
 SUMMARY=$(echo "$OUT" | grep -E '^Converting|->|warning|ERROR' | sed -e 's#^Converting .*/#Converted: #' -e 's#  -> .*/\([^/]*\.RPP\)#  → \1#' | head -40)
 
+if echo "$OUT" | grep -q "No permission to read the folder"; then
+  alert "AAF to Reaper" "macOS did not allow the app to read the folder with your audio files, so the project has no audio.
+
+Open System Settings > Privacy & Security > Files and Folders, find \"AAF to Reaper\" and switch on the folder (Desktop, Documents or Downloads). Then convert again.
+
+Tip: folders outside Desktop, Documents and Downloads need no permission."
+  exit 1
+fi
+
 if [ -z "$RPPS" ]; then
   alert "AAF to Reaper" "Conversion failed.
 

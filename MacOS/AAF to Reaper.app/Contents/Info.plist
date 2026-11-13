@@ -15,9 +15,19 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.0.1</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>AAF to Reaper reads the AAF's audio files and writes the REAPER project next to the AAF.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>AAF to Reaper reads the AAF's audio files and writes the REAPER project next to the AAF.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>AAF to Reaper reads the AAF's audio files and writes the REAPER project next to the AAF.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>AAF to Reaper reads the AAF's audio files and writes the REAPER project next to the AAF.</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>AAF to Reaper reads the AAF's audio files and writes the REAPER project next to the AAF.</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.13</string>
 	<key>NSHighResolutionCapable</key>

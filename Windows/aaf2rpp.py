@@ -468,7 +468,9 @@ class Converter(object):
         if m is None:
             path = self._locate(desc, name)
             if path is None:
-                self.warn('Media file not found for clip "%s"' % name)
+                urls = [u16s(l.data('URLString')) for l in (desc.get('Locator') or [])]
+                self.warn('Media file not found for clip "%s" (looked for %s, and in the AAF\'s folder)'
+                          % (name, ', '.join(unquote(u) for u in urls if u) or 'no path in AAF'))
                 self.media_cache[key] = None
                 return None
             ext = os.path.splitext(path)[1].lower()
@@ -514,6 +516,12 @@ class Converter(object):
         # search next to the AAF by file name
         here = os.path.dirname(os.path.abspath(self.path))
         names = set(os.path.basename(c.replace('\\', '/')) for c in cands)
+        try:
+            os.listdir(here)
+        except OSError as e:
+            self.warn('No permission to read the folder "%s" (%s). On a Mac, allow it in '
+                      'System Settings > Privacy & Security > Files and Folders.' % (here, e))
+            return None
         for root, _dirs, files in os.walk(here):
             for fn in files:
                 if fn in names:
