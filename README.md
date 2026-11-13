@@ -11,7 +11,7 @@ No plug-ins and no extra libraries: just Python 3.
 - **[AAF-to-Reaper-Windows.zip](https://github.com/sarcman/aaf-to-reaper/raw/main/downloads/AAF-to-Reaper-Windows.zip)**
 - **[Example_AAF.zip](https://github.com/sarcman/aaf-to-reaper/raw/main/downloads/Example_AAF.zip)**: a sample AAF from DaVinci Resolve with its audio, to try it right away
 
-Unzip, then follow the `README.txt` inside ([Mac](MacOS/README.txt), [Windows](Windows/README.txt)).
+Unzip, then follow the `README.txt` inside.
 
 ## How it works
 
