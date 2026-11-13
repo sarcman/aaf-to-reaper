@@ -1,4 +1,4 @@
-<p align="center"><img src="icon.png" width="160" alt="AAF to Reaper icon"></p>
+<p align="center"><img src=".github/icon.png" width="160" alt="AAF to Reaper icon"></p>
 
 # AAF to Reaper
 
@@ -45,6 +45,6 @@ The Mac app isn't signed by Apple: the first time, right-click it and choose **O
 
 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"><img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.svg" alt="CC BY-NC-SA 4.0" width="88"></a>
 
-<sub><a href="LICENSE">CC BY-NC-SA 4.0</a>: free to use, share and modify with credit, not for sale or commercial use. Modified versions must keep the same license.</sub>
+<sub><a href=".github/LICENSE">CC BY-NC-SA 4.0</a>: free to use, share and modify with credit, not for sale or commercial use. Modified versions must keep the same license.</sub>
 
 <sub>℗ 2026 Orestis Karamanlis</sub>
