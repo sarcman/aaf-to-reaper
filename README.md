@@ -30,12 +30,6 @@ Unzip, then follow the `README.txt` inside ([Mac](MacOS/README.txt), [Windows](W
 
 **Not carried over:** track faders and pan (Resolve doesn't export them), plug-ins and effects.
 
-## Command line
-
-```
-python3 aaf2rpp.py file1.aaf file2.aaf [-o output_folder]
-```
-
 ## Requirements
 
 - **Mac:** Python 3 (comes with Apple's Command Line Tools: `xcode-select --install`)
