@@ -7,12 +7,10 @@ No plug-ins and no extra libraries: just Python 3.
 
 ## Download
 
-Get the latest version from [Releases](../../releases/latest):
+- **[AAF-to-Reaper-Mac.zip](https://github.com/sarcman/aaf-to-reaper/raw/main/downloads/AAF-to-Reaper-Mac.zip)**: Apple Silicon and Intel
+- **[AAF-to-Reaper-Windows.zip](https://github.com/sarcman/aaf-to-reaper/raw/main/downloads/AAF-to-Reaper-Windows.zip)**
 
-- **AAF-to-Reaper-Mac.zip** – Apple Silicon and Intel
-- **AAF-to-Reaper-Windows.zip**
-
-Setup and usage are in each version's `README.txt` ([Mac](MacOS/README.txt), [Windows](Windows/README.txt)).
+Unzip, then follow the `README.txt` inside ([Mac](MacOS/README.txt), [Windows](Windows/README.txt)).
 
 ## How it works
 
