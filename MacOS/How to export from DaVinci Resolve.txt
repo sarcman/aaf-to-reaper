@@ -1,0 +1,22 @@
+From DaVinci Resolve to REAPER - quick guide
+=============================================
+
+1. EXPORT THE AAF
+   In DaVinci Resolve: Fairlight page > File > Export > Timeline > AAF Files
+   Save the .aaf file.
+   (This saves only the AAF, not the audio.)
+
+2. COLLECT THE FILES
+   Make a new folder and put inside it:
+   - the .aaf file
+   - all the audio files used in the timeline
+
+3. MOVE IT (only if needed)
+   Copy the whole folder to the other computer.
+
+4. CONVERT
+   Open "AAF to Reaper", choose the .aaf file and click "Open in REAPER".
+   The REAPER project is created in the same folder, in "<AAF name> - Reaper".
+
+Tip: the original audio files are copied whole, so in REAPER you can
+extend clips and fades beyond what was used in Resolve.

@@ -15,6 +15,8 @@ Unzip, then follow the `README.txt` inside ([Mac](MacOS/README.txt), [Windows](W
 
 ## How it works
 
+In DaVinci Resolve: **Fairlight > File > Export > Timeline > AAF Files**. Put the AAF and all the audio files it uses in one folder (see [How to export from DaVinci Resolve](How%20to%20export%20from%20DaVinci%20Resolve.txt)). Then:
+
 1. Open the app and choose one or more `.aaf` files.
 2. A folder `<AAF name> - Reaper` is created next to the AAF, with the `.RPP` project and a `SoundFiles` folder (audio as WAV).
 3. Click **Open in REAPER**.
