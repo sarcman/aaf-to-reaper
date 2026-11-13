@@ -40,19 +40,68 @@ OSA
 fi
 
 echo "==== $(date) ====" >> "$LOG"
-OUT=$("$PY" "$HERE/aaf2rpp.py" "${FILES[@]}" 2>&1)
-RC=$?
-echo "$OUT" >> "$LOG"
+run_convert() {
+  OUT=$("$PY" "$HERE/aaf2rpp.py" "${FILES[@]}" 2>&1)
+  RC=$?
+  echo "$OUT" >> "$LOG"
+}
+
+# Folder that macOS refused to let us read (empty if none)
+blocked_dir() {
+  local f
+  f=$(echo "$OUT" | sed -n "s/.*Operation not permitted: '\(.*\)'.*/\1/p" | head -1)
+  if [ -n "$f" ]; then dirname "$f"; return; fi
+  echo "$OUT" | sed -n 's/.*No permission to read the folder "\([^"]*\)".*/\1/p' | head -1
+}
+
+run_convert
+
+# macOS only lets this (unsigned) app read files you pick yourself.
+# If the audio is blocked, ask the user to pick its folder, then convert again.
+TRIES=0
+LAST=""
+while [ $TRIES -lt 4 ]; do
+  DIR=$(blocked_dir)
+  [ -z "$DIR" ] && break
+  [ "$DIR" = "$LAST" ] && break
+  LAST="$DIR"
+  TRIES=$((TRIES+1))
+  PICK=$(/usr/bin/osascript - "$DIR" <<'OSA' 2>/dev/null
+on run argv
+  set d to item 1 of argv
+  set p to "macOS needs your OK to read the audio files." & return & "Select this folder and click Choose:" & return & return & d
+  set loc to missing value
+  try
+    set loc to (POSIX file d) as alias
+  end try
+  try
+    if loc is missing value then
+      set f to choose folder with prompt p
+    else
+      set f to choose folder with prompt p default location loc
+    end if
+  on error
+    return ""
+  end try
+  return POSIX path of f
+end run
+OSA
+)
+  [ -z "$PICK" ] && break
+  echo "---- retry after folder access: $PICK" >> "$LOG"
+  run_convert
+done
 
 RPPS=$(echo "$OUT" | sed -n 's/^  -> \(.*\.RPP\)  (.*/\1/p')
 SUMMARY=$(echo "$OUT" | grep -E '^Converting|->|warning|ERROR' | sed -e 's#^Converting .*/#Converted: #' -e 's#  -> .*/\([^/]*\.RPP\)#  → \1#' | head -40)
 
-if echo "$OUT" | grep -q "No permission to read the folder"; then
-  alert "AAF to Reaper" "macOS did not allow the app to read the folder with your audio files, so the project has no audio.
+if [ -n "$(blocked_dir)" ]; then
+  alert "AAF to Reaper" "macOS did not allow the app to read your audio files:
+$(blocked_dir)
 
-Open System Settings > Privacy & Security > Files and Folders, find \"AAF to Reaper\" and switch on the folder (Desktop, Documents or Downloads). Then convert again.
+Fix (once): System Settings > Privacy & Security > Full Disk Access, click +, and add \"AAF to Reaper\". Then convert again.
 
-Tip: folders outside Desktop, Documents and Downloads need no permission."
+Or keep your AAF and audio in a folder outside Desktop, Documents and Downloads."
   exit 1
 fi
 
