@@ -1,0 +1,50 @@
+<p align="center"><img src="icon.png" width="160" alt="AAF to Reaper icon"></p>
+
+# AAF to Reaper
+
+Turns an AAF exported from **DaVinci Resolve** (also Avid, Premiere, Pro Tools) into a **REAPER** project.
+No plug-ins and no extra libraries: just Python 3.
+
+## Download
+
+Get the latest version from [Releases](../../releases/latest):
+
+- **AAF-to-Reaper-Mac.zip** – Apple Silicon and Intel
+- **AAF-to-Reaper-Windows.zip**
+
+Setup and usage are in each version's `README.txt` ([Mac](MacOS/README.txt), [Windows](Windows/README.txt)).
+
+## How it works
+
+1. Open the app and choose one or more `.aaf` files.
+2. A folder `<AAF name> - Reaper` is created next to the AAF, with the `.RPP` project and a `SoundFiles` folder (audio as WAV).
+3. Click **Open in REAPER**.
+
+## What comes across
+
+- Tracks and track names
+- Clips: position, length, trims
+- Fade-ins, fade-outs, crossfades
+- Clip volume (gain)
+- Stereo clips (Resolve's separate L/R MXF files become one stereo WAV)
+- Start timecode, frame rate, sample rate
+- Linked media (MXF, WAV, AIFF) and embedded media
+
+**Not carried over:** track faders and pan (Resolve doesn't export them), plug-ins and effects.
+
+## Command line
+
+```
+python3 aaf2rpp.py file1.aaf file2.aaf [-o output_folder]
+```
+
+## Requirements
+
+- **Mac:** Python 3 (comes with Apple's Command Line Tools: `xcode-select --install`)
+- **Windows:** Python 3 from [python.org](https://www.python.org/downloads/windows/)
+
+The Mac app isn't signed by Apple: the first time, right-click it and choose **Open**.
+
+## License
+
+[CC BY-NC-SA 4.0](LICENSE): free to use, share and modify with credit, not for sale or commercial use. Modified versions must keep the same license.
