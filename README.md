@@ -28,6 +28,7 @@ Unzip, then follow the `README.txt` inside ([Mac](MacOS/README.txt), [Windows](W
 - Stereo clips (Resolve's separate L/R MXF files become one stereo WAV)
 - Start timecode, frame rate, sample rate
 - Linked media (MXF, WAV, AIFF) and embedded media
+- Full-length audio: when the AAF links to the original WAV files, they are copied whole, so you can extend clips and fades in REAPER
 
 **Not carried over:** track faders and pan (Resolve doesn't export them), plug-ins and effects.
 

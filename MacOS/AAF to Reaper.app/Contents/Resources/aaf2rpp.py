@@ -12,6 +12,7 @@ import sys
 import struct
 import uuid
 import re
+import shutil
 from urllib.parse import unquote, urlparse
 
 sys.dont_write_bytecode = True
@@ -162,6 +163,8 @@ class Media(object):
         self.channels = channels
         self.length = length      # samples
         self.embedded = embedded  # bytes (raw/wav) for embedded essence
+        self.wav = None           # header info for linked WAV files
+        self.chan_index = 0       # which channel of a multichannel file this is
 
     def bps(self):
         return (self.bits + 7) // 8
@@ -188,6 +191,22 @@ class Media(object):
                         if aes3:
                             chunk = _aes3_to_pcm24(chunk)
                         yield chunk
+        elif self.kind == 'wav':
+            info = self.wav
+            fnch = info['channels']
+            frame = fnch * self.bps()
+            with open(self.path, 'rb') as f:
+                f.seek(info['data_off'])
+                remaining = info['data_len']
+                while remaining > 0:
+                    n = min(remaining, frame * 262144)
+                    chunk = f.read(n)
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                    if fnch > 1 and self.channels == 1:
+                        chunk = extract_channel(chunk, fnch, min(self.chan_index, fnch - 1), self.bps())
+                    yield chunk
         elif self.kind == 'raw':
             yield self.embedded
 
@@ -220,6 +239,52 @@ def write_wav(path, rate, bits, channels, chunks_iter):
         f.seek(12 + 8 + len(fmt_chunk) + 4)
         f.write(struct.pack('<I', total))
     return total
+
+
+def wav_info(path):
+    """Return dict(channels, rate, bits, data_off, data_len) for a RIFF/RF64 WAV."""
+    with open(path, 'rb') as f:
+        hdr = f.read(12)
+        if len(hdr) < 12 or hdr[:4] not in (b'RIFF', b'RF64', b'BW64') or hdr[8:12] != b'WAVE':
+            return None
+        info = {}
+        ds64_len = None
+        while True:
+            ch = f.read(8)
+            if len(ch) < 8:
+                break
+            cid, ln = ch[:4], struct.unpack('<I', ch[4:])[0]
+            pos = f.tell()
+            if cid == b'ds64':
+                d = f.read(min(ln, 28))
+                if len(d) >= 24:
+                    ds64_len = struct.unpack('<Q', d[16:24])[0]
+            elif cid == b'fmt ':
+                d = f.read(min(ln, 40))
+                fmt_tag, nch, rate = struct.unpack('<HHI', d[:8])
+                bits = struct.unpack('<H', d[14:16])[0]
+                info.update(format=fmt_tag, channels=nch, rate=rate, bits=bits)
+            elif cid == b'data':
+                if ln == 0xFFFFFFFF and ds64_len is not None:
+                    ln = ds64_len
+                info.update(data_off=pos, data_len=ln)
+                break
+            f.seek(pos + ln + (ln & 1))
+        if 'channels' not in info or 'data_off' not in info:
+            return None
+        return info
+
+
+def extract_channel(chunk, nch, idx, bps):
+    """Take channel idx out of interleaved PCM."""
+    if nch == 1:
+        return chunk
+    frame = nch * bps
+    n = len(chunk) - len(chunk) % frame
+    out = bytearray((n // frame) * bps)
+    for b in range(bps):
+        out[b::bps] = chunk[idx * bps + b:n:frame]
+    return bytes(out)
 
 
 def interleave(chunks_list, bps):
@@ -313,6 +378,7 @@ class Converter(object):
             if mid:
                 self.essence_data[bytes(mid)] = ed
         self.media_cache = {}
+        self.path_users = {}
 
     def warn(self, msg):
         if msg not in self.warnings:
@@ -476,6 +542,20 @@ class Converter(object):
             ext = os.path.splitext(path)[1].lower()
             kind = 'mxf' if ext == '.mxf' else 'file'
             m = Media(name, path, kind, int(round(rate)), bits, ch, length)
+            m.aaf_rate = int(round(rate))
+            if ext in ('.wav', '.wave', '.bwf'):
+                info = wav_info(path)  # may raise PermissionError (macOS privacy)
+                if info and info.get('format') in (1, 0xFFFE):
+                    m.kind = 'wav'
+                    m.wav = info
+                    m.rate = info['rate']
+                    m.bits = info['bits']
+                    # a linked multichannel file is referenced once per channel
+                    m.channels = 1 if info['channels'] > 1 else info['channels']
+                    m.file_channels = info['channels']
+            users = self.path_users.setdefault(path, [])
+            m.chan_index = len(users)
+            users.append(key)
         self.media_cache[key] = m
         return m
 
@@ -692,7 +772,7 @@ class Converter(object):
             tracks.append((name, items))
             for it in items:
                 for m, _o in it.sources:
-                    project_rate = project_rate or m.rate
+                    project_rate = project_rate or getattr(m, 'aaf_rate', None) or m.rate
 
         project_rate = project_rate or 48000
         written = {}
@@ -711,8 +791,37 @@ class Converter(object):
         medias = [m for m, _o in item.sources]
         offsets = [o for _m, o in item.sources]
         same_offset = max(offsets) - min(offsets) < 1e-6
-        # media that REAPER can read directly
-        if len(medias) == 1 and medias[0].kind == 'file':
+        # Linked original files: if every channel comes from the same file,
+        # copy that whole file into SoundFiles (keeps all audio before/after
+        # the clip) or, for video and other formats, use it where it is.
+        paths = set(m.path for m in medias)
+        if len(paths) == 1 and medias[0].kind in ('file', 'wav') and same_offset:
+            src = medias[0].path
+            item.soffs = offsets[0]
+            fch = getattr(medias[0], 'file_channels', None)
+            if len(medias) == 1 and fch and fch > 1:
+                item.chanmode = 3 + min(medias[0].chan_index, 1)  # mono left / right
+            ext = os.path.splitext(src)[1].lower()
+            if ext not in ('.wav', '.wave', '.bwf', '.aif', '.aiff', '.flac', '.mp3', '.ogg'):
+                return src
+            key = ('copy', src)
+            if key in written:
+                return written[key]
+            fn = safe_name(os.path.basename(src))
+            used = set(os.path.basename(v) for v in written.values())
+            b, e = os.path.splitext(fn)
+            i = 2
+            while fn in used:
+                fn = '%s_%d%s' % (b, i, e)
+                i += 1
+            dest = os.path.join(sound_dir, fn)
+            self.log('  copying %s' % fn)
+            shutil.copyfile(src, dest)
+            written[key] = dest
+            return dest
+        if any(m.kind == 'file' for m in medias):
+            self.warn('Clip "%s": its channels come from different non-WAV files; only the first is used'
+                      % item.name)
             item.soffs = offsets[0]
             return medias[0].path
         rate = medias[0].rate
@@ -807,7 +916,7 @@ class Converter(object):
         L.append('      VOLPAN %s 0 1 -1' % ('%.10f' % it.gain).rstrip('0').rstrip('.'))
         L.append('      SOFFS %s' % fmt(getattr(it, 'soffs', 0.0)))
         L.append('      PLAYRATE 1 1 0 -1 0 0.0025')
-        L.append('      CHANMODE 0')
+        L.append('      CHANMODE %d' % getattr(it, 'chanmode', 0))
         L.append('      GUID %s' % new_guid())
         src = it.file
         ext = os.path.splitext(src)[1].lower()

@@ -31,6 +31,9 @@ WHAT COMES ACROSS
 - Clip volume (gain)
 - Stereo clips (Resolve's separate L/R files become one stereo file)
 - Start timecode, frame rate, sample rate
+- Full-length audio: if the AAF links to your original WAV files
+  (Resolve: File > Export > Timeline > AAF), they are copied whole,
+  so you can extend clips and fades in REAPER
 
 WHAT DOES NOT
 - Track faders and pan (Resolve does not export them)
